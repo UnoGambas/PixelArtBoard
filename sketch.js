@@ -18,6 +18,7 @@ let lastCol, lastRow; // 연필 도구에서 마지막으로 그려진 셀의 �
 let btnPencil, btnRect, btnBlack, btnWhite;
 let btnSavePNG;
 let inputFileName;
+let labelSaveName; // '저장명' 안내 텍스트
 
 // --- 💡 사운드 변수 ---
 let do1Sound = null; // 픽셀 '띡' 소리용 (Do1.mp3)
@@ -103,6 +104,16 @@ function setup() {
     inputFileName = createInput('pixel-art.png');
     inputFileName.size(140);
     inputFileName.position(btnPencil.x, height + 40);
+
+	// 안내 텍스트: '저장명'을 입력칸 옆에 표시
+	labelSaveName = createSpan('저장명을 입력하세요. png 확장자는 자동으로 추가됩니다.');
+	labelSaveName.style('font-size', '14px');
+	// 위치: input 오른쪽에 약간의 간격을 둠
+	if (inputFileName && typeof inputFileName.width !== 'undefined') {
+		labelSaveName.position(btnPencil.x + inputFileName.width + 10, height + 44);
+	} else {
+		labelSaveName.position(btnPencil.x + 150, height + 44);
+	}
 
     updateUI(); // 버튼 활성 상태 초기화
 }
@@ -201,7 +212,8 @@ function windowResized() {
     btnBlack.position(btnRect.x + btnRect.width + 20, height + 10);
     btnWhite.position(btnBlack.x + btnBlack.width + 10, height + 10);
     if (btnSavePNG) btnSavePNG.position(btnWhite.x + btnWhite.width + 20, height + 10);
-    if (inputFileName) inputFileName.position(btnPencil.x, height + 40);
+	if (inputFileName) inputFileName.position(btnPencil.x, height + 40);
+	if (labelSaveName) labelSaveName.position(btnPencil.x + (inputFileName.width || 140) + 10, height + 44);
 }
 
 // (savePNG, sanitizeFileName 함수는 동일하게 유지)
