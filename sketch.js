@@ -19,6 +19,9 @@ let btnPencil, btnRect, btnBlack, btnWhite;
 let btnSavePNG;
 let inputFileName;
 let labelSaveName; // '저장명' 안내 텍스트
+// 💡 불러오기 기능 UI 추가
+let inputLoadPNG; // 파일 불러오기 버튼 (실제는 input type="file")
+
 
 // --- 💡 사운드 변수 ---
 let do1Sound = null; // 픽셀 '띡' 소리용 (Do1.mp3)
@@ -52,7 +55,7 @@ function setup() {
     if (dragSound) dragSound.setVolume(0.5);
     // ---------------------------
 
-    // 캔버스 데이터 초기화 (32x32 2D 배열 생성)
+    // 캔버스 데이터 초기화 (16x16 2D 배열 생성)
     gridData = Array(canvasSize).fill(null).map(() => Array(canvasSize).fill(null));
     
     // 기본 색상 설정
@@ -66,54 +69,53 @@ function setup() {
         }
     }
 
-    // --- UI 생성 (이하 동일) ---
+    // --- UI 생성 ---
+    let btnY = height + 10;
+    let inputY = height + 40;
+    let currentX = 10;
+    
     btnPencil = createButton('✏️ 연필');
-    btnPencil.position(10, height + 10);
-    btnPencil.mousePressed(() => {
-        currentTool = 'pencil';
-        updateUI();
-    });
+    btnPencil.position(currentX, btnY);
+    btnPencil.mousePressed(() => { currentTool = 'pencil'; updateUI(); });
+    currentX += btnPencil.width + 10;
 
     btnRect = createButton('⬜ 사각형');
-    btnRect.position(btnPencil.x + btnPencil.width + 10, height + 10);
-    btnRect.mousePressed(() => {
-        currentTool = 'rectangle';
-        updateUI();
-    });
+    btnRect.position(currentX, btnY);
+    btnRect.mousePressed(() => { currentTool = 'rectangle'; updateUI(); });
+    currentX += btnRect.width + 20;
 
     btnBlack = createButton('⬛ 검은색');
-    btnBlack.position(btnRect.x + btnRect.width + 20, height + 10);
-    btnBlack.mousePressed(() => {
-        currentColor = color(0);
-        updateUI();
-    });
+    btnBlack.position(currentX, btnY);
+    btnBlack.mousePressed(() => { currentColor = color(0); updateUI(); });
+    currentX += btnBlack.width + 10;
 
     btnWhite = createButton('⬜ 흰색 (지우개)');
-    btnWhite.position(btnBlack.x + btnBlack.width + 10, height + 10);
-    btnWhite.mousePressed(() => {
-        currentColor = color(255);
-        updateUI();
-    });
+    btnWhite.position(currentX, btnY);
+    btnWhite.mousePressed(() => { currentColor = color(255); updateUI(); });
+    currentX += btnWhite.width + 20;
 
     btnSavePNG = createButton('Save PNG');
-    btnSavePNG.position(btnWhite.x + btnWhite.width + 20, height + 10);
-    btnSavePNG.mousePressed(() => {
-        savePNG();
-    });
+    btnSavePNG.position(currentX, btnY);
+    btnSavePNG.mousePressed(() => { savePNG(); });
+    currentX += btnSavePNG.width + 10;
 
+    // 💡 불러오기 버튼 추가
+    inputLoadPNG = createFileInput(handleFileLoad);
+    inputLoadPNG.position(currentX, btnY);
+    
+    // 저장 파일명 입력
     inputFileName = createInput('pixel-art.png');
     inputFileName.size(140);
-    inputFileName.position(btnPencil.x, height + 40);
+    inputFileName.position(10, inputY);
 
-	// 안내 텍스트: '저장명'을 입력칸 옆에 표시
-	labelSaveName = createSpan('저장명을 입력하세요. png 확장자는 자동으로 추가됩니다.');
-	labelSaveName.style('font-size', '14px');
-	// 위치: input 오른쪽에 약간의 간격을 둠
-	if (inputFileName && typeof inputFileName.width !== 'undefined') {
-		labelSaveName.position(btnPencil.x + inputFileName.width + 10, height + 44);
-	} else {
-		labelSaveName.position(btnPencil.x + 150, height + 44);
-	}
+    // 안내 텍스트: '저장명'을 입력칸 옆에 표시
+    labelSaveName = createSpan('저장명을 입력하세요. png 확장자는 자동으로 추가됩니다.');
+    labelSaveName.style('font-size', '14px');
+    if (inputFileName) {
+        labelSaveName.position(10 + inputFileName.width + 10, inputY + 4);
+    } else {
+        labelSaveName.position(160, inputY + 4);
+    }
 
     updateUI(); // 버튼 활성 상태 초기화
 }
@@ -125,7 +127,7 @@ function draw() {
 }
 
 
-// --- 3. 마우스/터치 입력 함수 ---
+// --- 3. 마우스/터치 입력 함수 (생략, 기존과 동일) ---
 
 function mousePressed() {
     if (mouseX < 0 || mouseX > width || mouseY < 0 || mouseY > height) {
@@ -207,16 +209,33 @@ function windowResized() {
     pixelSize = canvasDim / canvasSize;
     resizeCanvas(canvasDim, canvasDim);
     
-    btnPencil.position(10, height + 10);
-    btnRect.position(btnPencil.x + btnPencil.width + 10, height + 10);
-    btnBlack.position(btnRect.x + btnRect.width + 20, height + 10);
-    btnWhite.position(btnBlack.x + btnBlack.width + 10, height + 10);
-    if (btnSavePNG) btnSavePNG.position(btnWhite.x + btnWhite.width + 20, height + 10);
-	if (inputFileName) inputFileName.position(btnPencil.x, height + 40);
-	if (labelSaveName) labelSaveName.position(btnPencil.x + (inputFileName.width || 140) + 10, height + 44);
+    let btnY = height + 10;
+    let inputY = height + 40;
+    let currentX = 10;
+    
+    btnPencil.position(currentX, btnY);
+    currentX += btnPencil.width + 10;
+    
+    btnRect.position(currentX, btnY);
+    currentX += btnRect.width + 20;
+    
+    btnBlack.position(currentX, btnY);
+    currentX += btnBlack.width + 10;
+    
+    btnWhite.position(currentX, btnY);
+    currentX += btnWhite.width + 20;
+
+    if (btnSavePNG) btnSavePNG.position(currentX, btnY);
+    currentX += btnSavePNG.width + 10;
+    
+    // 💡 불러오기 버튼 위치 재조정
+    if (inputLoadPNG) inputLoadPNG.position(currentX, btnY);
+    
+    if (inputFileName) inputFileName.position(10, inputY);
+    if (labelSaveName) labelSaveName.position(10 + (inputFileName.width || 140) + 10, inputY + 4);
 }
 
-// (savePNG, sanitizeFileName 함수는 동일하게 유지)
+// (savePNG, sanitizeFileName 함수는 기존과 동일)
 // --- 
 function savePNG() {
     const scale = 1; // 업스케일 없이 원본 32x32 픽셀로 저장
@@ -286,7 +305,56 @@ function sanitizeFileName(name) {
 // --- 
 
 
-// --- 4. 그리기 헬퍼 함수 ---
+// --- 💡 6. PNG 불러오기 헬퍼 함수 추가 ---
+
+/** 1. 파일 업로드를 처리하는 메인 핸들러 */
+function handleFileLoad(file) {
+    // 파일 타입이 이미지인지 확인
+    if (file.type === 'image') {
+        // p5.js의 loadImage를 사용하여 이미지 데이터를 로드
+        loadImage(file.data, onImageLoaded);
+    } else {
+        alert('이것은 이미지 파일이 아닙니다. (jpg, png 등)');
+    }
+}
+
+/** 2. 이미지 로드가 완료되었을 때 실행되는 핵심 함수 */
+function onImageLoaded(img) {
+    const expectedSize = canvasSize; // 현재 설정된 캔버스 크기는 16
+
+    // 로드된 이미지 크기 검증 (16x16 픽셀이 아니면 오류)
+    if (img.width !== expectedSize || img.height !== expectedSize) {
+        alert(`[오류] 잘못된 파일입니다!\n\n현재 설정(${expectedSize}x${expectedSize})에 맞는 픽셀 크기의 이미지가 필요합니다.`);
+        return;
+    }
+
+    img.loadPixels(); // 이미지 픽셀 데이터 접근 준비
+
+    // 이미지의 픽셀 데이터를 gridData 배열에 복사
+    for (let c = 0; c < canvasSize; c++) {
+        for (let r = 0; r < canvasSize; r++) {
+            // 이미지 픽셀 배열에서의 인덱스 계산 (y * width + x) * 4
+            let x = c;
+            let y = r;
+            let index = (y * img.width + x) * 4;
+            
+            // RGBA 값 추출
+            let r_val = img.pixels[index];
+            let g_val = img.pixels[index + 1];
+            let b_val = img.pixels[index + 2];
+            let a_val = img.pixels[index + 3];
+            
+            // p5.Color 객체 생성 및 gridData에 저장
+            let pixelColor = color(r_val, g_val, b_val, a_val);
+            gridData[c][r] = pixelColor;
+        }
+    }
+    
+    alert('이미지를 성공적으로 불러왔습니다!');
+}
+// ------------------------------------------
+
+// --- 4. 그리기 헬퍼 함수 (생략, 기존과 동일) ---
 
 function drawPixelGrid() {
     noStroke();
@@ -341,7 +409,7 @@ function drawPixel(col, row, c) {
     }
     gridData[col][row] = c;
 
-    // --- 💡 픽셀 '띡' 사운드 재생 ---
+    // --- 💡 픽셀 '띡' 사운드 재생 헬퍼 ---
     playTickSound();
     // -----------------------------
 }
@@ -388,7 +456,7 @@ function drawLine(x0, y0, x1, y1, c) {
 }
 
 
-// --- 5. 유틸리티 함수 ---
+// --- 5. 유틸리티 함수 (생략, 기존과 동일) ---
 
 // --- 💡 '띡' 사운드 재생 헬퍼 ---
 /** 연필 '띡' 소리를 재생합니다. (Do1.mp3 사용) */
@@ -418,5 +486,4 @@ function updateUI() {
     btnRect.style('background-color', currentTool === 'rectangle' ? '#aaa' : '#fff');
     btnBlack.style('background-color', red(currentColor) === 0 ? '#aaa' : '#fff');
     btnWhite.style('background-color', red(currentColor) === 255 ? '#aaa' : '#fff');
-} 
-
+}
