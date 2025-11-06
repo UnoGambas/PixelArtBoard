@@ -117,7 +117,22 @@ function setup() {
         labelSaveName.position(160, inputY + 4);
     }
 
-    updateUI(); // 버튼 활성 상태 초기화
+	// 업스케일 슬라이더: 1x ~ 8x (정수)
+	scaleSlider = createSlider(1, 8, 1, 1);
+	scaleSlider.style('width', '100px');
+	scaleSlider.position(10 + (inputFileName.width || 140) + 80, inputY);
+
+	labelScale = createSpan('업스케일: x1');
+	labelScale.style('font-size', '14px');
+	labelScale.position(10 + (inputFileName.width || 140) + 190, inputY + 4);
+
+	// 슬라이더 값 변경 시 라벨 업데이트
+	scaleSlider.input(() => {
+		const v = Math.max(1, Math.floor(scaleSlider.value()));
+		labelScale.html(`업스케일: x${v}`);
+	});
+
+	updateUI(); // 버튼 활성 상태 초기화
 }
 
 function draw() {
@@ -140,7 +155,7 @@ function mousePressed() {
     startRow = row;
 
     if (currentTool === 'pencil') {
-        drawPixel(col, row, currentColor);
+		drawPixel(col, row, currentColor);
         lastCol = col;
         lastRow = row;
     }
@@ -233,13 +248,20 @@ function windowResized() {
     
     if (inputFileName) inputFileName.position(10, inputY);
     if (labelSaveName) labelSaveName.position(10 + (inputFileName.width || 140) + 10, inputY + 4);
+	// 재배치: 업스케일 슬라이더와 라벨
+	if (scaleSlider) scaleSlider.position(10 + (inputFileName.width || 140) + 80, inputY);
+	if (labelScale) labelScale.position(10 + (inputFileName.width || 140) + 190, inputY + 4);
 }
 
 // (savePNG, sanitizeFileName 함수는 기존과 동일)
 // --- 
 function savePNG() {
-    const scale = 1; // 업스케일 없이 원본 32x32 픽셀로 저장
-    const outSize = canvasSize * scale;
+	// 업스케일 값은 슬라이더에서 읽음 (없으면 1)
+	let scale = 1;
+	if (typeof scaleSlider !== 'undefined' && scaleSlider !== null) {
+		scale = Math.max(1, Math.floor(scaleSlider.value()));
+	}
+	const outSize = canvasSize * scale;
     const off = document.createElement('canvas');
     off.width = outSize;
     off.height = outSize;
@@ -253,8 +275,9 @@ function savePNG() {
             const gg = typeof green === 'function' ? green(col) : 0;
             const bb = typeof blue === 'function' ? blue(col) : 0;
             const aa = typeof alpha === 'function' ? alpha(col) : 255;
-            ctx.fillStyle = `rgba(${rr}, ${gg}, ${bb}, ${aa / 255})`;
-            ctx.fillRect(c * scale, r * scale, scale, scale);
+			ctx.fillStyle = `rgba(${rr}, ${gg}, ${bb}, ${aa / 255})`;
+			// 픽셀 하나를 (scale x scale) 영역으로 채움
+			ctx.fillRect(c * scale, r * scale, scale, scale);
         }
     }
     let desiredName = 'pixel-art.png';
